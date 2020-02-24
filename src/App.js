@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
@@ -6,9 +7,21 @@ import Persons from './components/Persons'
 const App = () => {
   const [ persons, setPersons] = useState([
     { name: 'Arto Hellas', number: 465464 }
-  ]) 
+  ])
 
-  const [ filterInput, setFilterInput ] = useState('ccccccccc')
+  const [ filterInput, setFilterInput ] = useState('')
+
+  const hook = () => {
+    console.log('effect')
+    axios
+      .get('http://localhost:3001/persons')
+      .then(response => {
+        console.log('promise fulfilled')
+        setPersons(response.data)
+      })
+  }
+  
+  useEffect(hook, [])
 
   const personsToShow = persons.filter(person => person.name.indexOf(filterInput) > -1)
 
