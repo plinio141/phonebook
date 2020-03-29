@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
+import servicePerson from './services/index'
+import Notification from './components/Notification'
 
 const App = () => {
   const [ persons, setPersons] = useState([
@@ -10,15 +11,12 @@ const App = () => {
   ])
 
   const [ filterInput, setFilterInput ] = useState('')
+  const [ notification, setNotification ] = useState({});
 
   const hook = () => {
-    console.log('effect')
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        console.log('promise fulfilled')
-        setPersons(response.data)
-      })
+    servicePerson.getAll().then(response => {
+      setPersons(response);
+    })
   }
   
   useEffect(hook, [])
@@ -30,8 +28,30 @@ const App = () => {
   }
 
   const addPerson = ({ newName, newNumber }) => {
-    const newPersons = persons.concat([{name: newName, number: newNumber}]);
-    setPersons(newPersons);
+    servicePerson.create({name: newName, number: newNumber})
+      .then(person => {
+        const newPersons = [...persons, person];
+        setPersons(newPersons);
+        setNotification({type:'success', message: `Added ${person.name}`});
+      });
+  }
+
+  const removePerson = (id) => {
+    servicePerson.remove(id).then(response => {
+      const arrPerson = persons.filter(person => person.id !== id );
+      setPersons(arrPerson);
+    }).catch(error => {
+      setNotification({type:'error', message: `Error in server`});
+    });
+  }
+
+  const updatePerson = (person) => {
+    servicePerson.update(person.id, person).then(personUpdated => {
+      const arrPerson = persons.map(p => personUpdated.id === p.id ? personUpdated : p );
+      setPersons(arrPerson);
+    }).catch(error => {
+      setNotification({type:'error', message: `Information of ${person.name} has already been removed from server`});
+    });
   }
 
   const handleFilterChange = (event) => {
@@ -40,11 +60,13 @@ const App = () => {
 
   return (
     <div>
-      <Filter filterInput={filterInput} handleFilterChange={handleFilterChange} />
       <h2>Phonebook</h2>
-      <PersonForm addPerson={addPerson} findName = {findName} />
+      <Notification notification={notification} />
+      <Filter filterInput={filterInput} handleFilterChange={handleFilterChange} />
+      <h2>Add a new</h2>
+      <PersonForm addPerson={addPerson} findName = {findName} updatePerson={updatePerson}/>
       <h2>Numbers</h2>
-      <Persons personsToShow={personsToShow} />
+      <Persons personsToShow={personsToShow} removePerson={removePerson}/>
     </div>
   )
 }

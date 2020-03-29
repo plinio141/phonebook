@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const Filter = ({ addPerson, findName }) => {
+const PersonForm = ({ addPerson, findName, updatePerson }) => {
 
     const [ newName, setNewName ] = useState('')
     const [ newNumber, setNewNumber ] = useState('')
@@ -8,11 +8,13 @@ const Filter = ({ addPerson, findName }) => {
 
     const addName = (event) => {
         event.preventDefault()
-        if(findName(newName)){
-            alert(`${newName} is already added to phonebook`);
-            return;
+        const person = findName(newName);
+        if(person){
+            const confirm = window.confirm(`${person.name} is already added to phonebook, replace the old number whith a new one`);
+            confirm && updatePerson({...person, number: newNumber})
+        } else{
+            addPerson({ newName, newNumber });
         }
-        addPerson({ newName, newNumber });
         setNewName('');
         setNewNumber('');
     }
@@ -46,4 +48,4 @@ const Filter = ({ addPerson, findName }) => {
     )
 }
 
-export default Filter
+export default PersonForm
